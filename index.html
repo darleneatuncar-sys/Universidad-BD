@@ -1,29 +1,1077 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Sistema de Matrícula</title>
 
-    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --primary: #3ecf8e;
+            --primary-dark: #2eaf76;
+            --dark: #202938;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --danger: #ef4444;
+            --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            line-height: 1.5;
+        }
+
+        /* ---------- Encabezado ---------- */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 28px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar h1 {
+            font-size: 20px;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .topbar .sub {
+            display: block;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .estado {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .estado .punto {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        .estado.ok {
+            background: #e7f8f0;
+            color: var(--primary-dark);
+        }
+
+        .estado.ok .punto {
+            background: var(--primary);
+        }
+
+        .estado.error {
+            background: #fdecec;
+            color: var(--danger);
+        }
+
+        .estado.error .punto {
+            background: var(--danger);
+        }
+
+        /* ---------- Layout ---------- */
+        .layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 24px;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 28px 60px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-self: start;
+            position: sticky;
+            top: 96px;
+        }
+
+        .nav button {
+            text-align: left;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--dark);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 11px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .nav button:hover {
+            background: #eef2f7;
+        }
+
+        .nav button.activo {
+            background: var(--dark);
+            color: #fff;
+        }
+
+        /* ---------- Tarjeta de contenido ---------- */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .card-head h2 {
+            font-size: 17px;
+            margin: 0;
+        }
+
+        .card-head .conteo {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 400;
+            margin-left: 8px;
+        }
+
+        /* ---------- Botones ---------- */
+        button {
+            font-family: inherit;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--primary);
+            color: #fff;
+            transition: background 0.15s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn.secundario {
+            background: #eef2f7;
+            color: var(--dark);
+        }
+
+        .btn.secundario:hover {
+            background: #e2e8f0;
+        }
+
+        .btn.peligro {
+            background: transparent;
+            color: var(--danger);
+            padding: 4px 8px;
+        }
+
+        .btn.peligro:hover {
+            background: #fdecec;
+        }
+
+        .btn.mini {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        .btn.accion {
+            background: transparent;
+            color: #2563eb;
+            padding: 4px 8px;
+        }
+
+        .btn.accion:hover {
+            background: #eaf1fe;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ---------- Tabla de datos ---------- */
+        .tabla-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 13px 20px;
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #eef2f6;
+            white-space: nowrap;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        td.col-id {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        td.acciones {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        td.acciones .btn + .btn {
+            margin-left: 4px;
+        }
+
+        th.col-acciones {
+            width: 1%;
+        }
+
+        .vacio {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            white-space: normal;
+        }
+
+        /* ---------- Formulario ---------- */
+        .form-panel {
+            display: none;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: #f9fbfd;
+        }
+
+        .form-panel.abierto {
+            display: block;
+        }
+
+        .form-panel h3 {
+            margin: 0 0 16px;
+            font-size: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .campo label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .campo label .ayuda {
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .campo .nota-auto {
+            padding: 10px 12px;
+            border: 1px dashed var(--border);
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 13px;
+            background: #f8fafc;
+        }
+
+        .campo input,
+        .campo select {
+            font-family: inherit;
+            font-size: 14px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--dark);
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.18);
+        }
+
+        .campo input:disabled {
+            background: #eef2f7;
+            color: var(--muted);
+        }
+
+        .form-acciones {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        /* ---------- Toast ---------- */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+            max-width: 380px;
+        }
+
+        .toast-msg {
+            padding: 12px 18px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
+            animation: aparecer 0.2s ease;
+        }
+
+        .toast-msg.ok {
+            background: var(--primary-dark);
+        }
+
+        .toast-msg.error {
+            background: var(--danger);
+        }
+
+        @keyframes aparecer {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 760px) {
+            .layout {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+
+            .nav {
+                position: static;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .topbar {
+                padding: 14px 16px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Sistema de Matrícula</h1>
+    <header class="topbar">
+        <h1>
+            Sistema de Matrícula
+            <span class="sub">Conexión con Supabase</span>
+        </h1>
+        <span id="estado" class="estado">
+            <span class="punto"></span>
+            <span id="estadoTexto">Conectando...</span>
+        </span>
+    </header>
 
-    <p>Conexión con Supabase</p>
+    <main class="layout">
+        <nav class="nav" id="nav"></nav>
 
-    <button id="btnConectar">
-        Probar conexión
-    </button>
+        <section class="card">
+            <div class="card-head">
+                <h2><span id="titulo">Carreras</span> <span class="conteo" id="conteo"></span></h2>
+                <button class="btn" id="btnNuevo">+ Nuevo registro</button>
+            </div>
 
-    <h3 id="resultado">Esperando conexión...</h3>
+            <div class="form-panel" id="formPanel">
+                <h3 id="formTitulo">Nuevo registro</h3>
+                <div class="form-grid" id="formCampos"></div>
+                <div class="form-acciones">
+                    <button class="btn" id="btnGuardar">Guardar</button>
+                    <button class="btn secundario" id="btnCancelar">Cancelar</button>
+                </div>
+            </div>
 
-    <script type="module" src="js/app.js"></script>
+            <div class="tabla-scroll">
+                <table>
+                    <thead id="thead"></thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
+    <div id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var SUPABASE_URL = 'https://rkwnmnsfnngjgcetjxkf.supabase.co';
+            var SUPABASE_KEY = 'sb_publishable__IM0TCudFN0QYMQLrJy5fg_fn8wSbms';
+
+            // ===== Esquema de la base "universidad" =====
+            var TABLAS = {
+                carrera: {
+                    etiqueta: 'Carreras',
+                    singular: 'Carrera',
+                    pk: 'id_carrera',
+                    columnas: [
+                        { campo: 'id_carrera', etiqueta: 'ID', tipo: 'number', pk: true, auto: true },
+                        { campo: 'nombre_carrera', etiqueta: 'Nombre de la carrera', tipo: 'text', requerido: true },
+                    ],
+                },
+                alumno: {
+                    etiqueta: 'Alumnos',
+                    singular: 'Alumno',
+                    pk: 'id_alumno',
+                    columnas: [
+                        { campo: 'id_alumno', etiqueta: 'ID', tipo: 'number', pk: true, auto: true },
+                        { campo: 'nombre', etiqueta: 'Nombre', tipo: 'text', requerido: true },
+                        { campo: 'dni', etiqueta: 'DNI', tipo: 'text', requerido: true },
+                        { campo: 'id_carrera', etiqueta: 'Carrera', tipo: 'select', tabla: 'carrera', valor: 'id_carrera', texto: 'nombre_carrera' },
+                    ],
+                },
+                docente: {
+                    etiqueta: 'Docentes',
+                    singular: 'Docente',
+                    pk: 'id_docente',
+                    columnas: [
+                        { campo: 'id_docente', etiqueta: 'ID', tipo: 'number', pk: true, auto: true },
+                        { campo: 'nombre_docente', etiqueta: 'Nombre del docente', tipo: 'text', requerido: true },
+                    ],
+                },
+                curso: {
+                    etiqueta: 'Cursos',
+                    singular: 'Curso',
+                    pk: 'id_curso',
+                    columnas: [
+                        { campo: 'id_curso', etiqueta: 'ID', tipo: 'number', pk: true, auto: true },
+                        { campo: 'nombre_curso', etiqueta: 'Nombre del curso', tipo: 'text', requerido: true },
+                        { campo: 'id_docente', etiqueta: 'Docente', tipo: 'select', tabla: 'docente', valor: 'id_docente', texto: 'nombre_docente' },
+                    ],
+                },
+                matricula: {
+                    etiqueta: 'Matrículas',
+                    singular: 'Matrícula',
+                    pk: null,
+                    claves: ['id_alumno', 'id_curso'],
+                    columnas: [
+                        { campo: 'id_alumno', etiqueta: 'Alumno', tipo: 'select', tabla: 'alumno', valor: 'id_alumno', texto: 'nombre', requerido: true },
+                        { campo: 'id_curso', etiqueta: 'Curso', tipo: 'select', tabla: 'curso', valor: 'id_curso', texto: 'nombre_curso', requerido: true },
+                        {
+                            campo: '_docente',
+                            etiqueta: 'Docente',
+                            tipo: 'derivado',
+                            desde: 'id_curso',
+                            necesita: ['curso', 'docente'],
+                            pasos: [
+                                { tabla: 'curso', clave: 'id_curso', valor: 'id_docente' },
+                                { tabla: 'docente', clave: 'id_docente', texto: 'nombre_docente' },
+                            ],
+                        },
+                        { campo: 'nota', etiqueta: 'Nota', tipo: 'number', min: 0, max: 20, step: '0.01' },
+                    ],
+                },
+            };
+
+            var ORDEN_TABLAS = ['carrera', 'alumno', 'docente', 'curso', 'matricula'];
+
+            function columnasClave(t) {
+                return TABLAS[t].claves ? TABLAS[t].claves : [TABLAS[t].pk];
+            }
+
+            // ===== Estado =====
+            var tablaActual = 'carrera';
+            var filas = [];
+            var editando = null;
+            var opciones = {};
+
+            var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+            var el = {
+                nav: document.getElementById('nav'),
+                estado: document.getElementById('estado'),
+                estadoTexto: document.getElementById('estadoTexto'),
+                titulo: document.getElementById('titulo'),
+                conteo: document.getElementById('conteo'),
+                thead: document.getElementById('thead'),
+                tbody: document.getElementById('tbody'),
+                formPanel: document.getElementById('formPanel'),
+                formTitulo: document.getElementById('formTitulo'),
+                formCampos: document.getElementById('formCampos'),
+                btnNuevo: document.getElementById('btnNuevo'),
+                btnGuardar: document.getElementById('btnGuardar'),
+                btnCancelar: document.getElementById('btnCancelar'),
+                toast: document.getElementById('toast'),
+            };
+
+            // ===== Utilidades =====
+            function aviso(mensaje, tipo) {
+                var div = document.createElement('div');
+                div.className = 'toast-msg ' + (tipo || 'ok');
+                div.textContent = mensaje;
+                el.toast.appendChild(div);
+                setTimeout(function () {
+                    div.remove();
+                }, 4200);
+            }
+
+            function mensajeError(error) {
+                if (error && error.code === '42501') {
+                    return 'Supabase bloquea la escritura (RLS). Corre el SQL de permisos en el SQL Editor.';
+                }
+                if (error && (error.code === '23505' || /duplicate key/i.test(error.message || ''))) {
+                    return 'Ese ID ya existe. Usa otro o déjalo vacío para que sea automático.';
+                }
+                return error && error.message ? error.message : 'Error desconocido';
+            }
+
+            function definirEstado(texto, tipo) {
+                el.estadoTexto.textContent = texto;
+                el.estado.className = 'estado ' + (tipo || '');
+            }
+
+            function clavesDe(fila) {
+                var resultado = {};
+                columnasClave(tablaActual).forEach(function (c) {
+                    resultado[c] = fila[c];
+                });
+                return resultado;
+            }
+
+            function cargarOpciones(tabla) {
+                if (opciones[tabla]) return Promise.resolve(opciones[tabla]);
+                return db
+                    .from(tabla)
+                    .select('*')
+                    .then(function (res) {
+                        if (res.error) throw res.error;
+                        opciones[tabla] = res.data || [];
+                        return opciones[tabla];
+                    });
+            }
+
+            function getOpciones(col) {
+                return cargarOpciones(col.tabla);
+            }
+
+            // Valor calculado recorriendo pasos (ej. matricula -> curso -> docente)
+            function resolverDerivado(col, valor) {
+                var actual = valor;
+                for (var i = 0; i < col.pasos.length; i++) {
+                    var paso = col.pasos[i];
+                    var lista = opciones[paso.tabla] || [];
+                    var fila = lista.filter(function (o) {
+                        return String(o[paso.clave]) === String(actual);
+                    })[0];
+                    if (!fila) return null;
+                    actual = paso.texto ? fila[paso.texto] : fila[paso.valor];
+                }
+                return actual;
+            }
+
+            function etiquetaDeOpcion(col, valor) {
+                var lista = opciones[col.tabla] || [];
+                var encontrado = lista.filter(function (o) {
+                    return String(o[col.valor]) === String(valor);
+                })[0];
+                return encontrado ? encontrado[col.texto] : valor;
+            }
+
+            // ===== Pestañas =====
+            function renderNav() {
+                el.nav.innerHTML = '';
+                ORDEN_TABLAS.forEach(function (nombre) {
+                    var btn = document.createElement('button');
+                    btn.textContent = TABLAS[nombre].etiqueta;
+                    btn.className = nombre === tablaActual ? 'activo' : '';
+                    btn.addEventListener('click', function () {
+                        seleccionarTabla(nombre);
+                    });
+                    el.nav.appendChild(btn);
+                });
+            }
+
+            function seleccionarTabla(nombre) {
+                tablaActual = nombre;
+                cerrarFormulario();
+                renderNav();
+                cargarFilas();
+            }
+
+            // ===== Leer datos =====
+            function cargarFilas() {
+                var def = TABLAS[tablaActual];
+                definirEstado('Cargando...', '');
+
+                var consulta = db.from(tablaActual).select('*');
+                var orden = def.pk || (def.claves && def.claves[0]);
+                if (orden) consulta = consulta.order(orden);
+
+                return consulta.then(function (res) {
+                    if (res.error) {
+                        definirEstado('Sin conexión', 'error');
+                        aviso('Error al leer: ' + mensajeError(res.error), 'error');
+                        filas = [];
+                        renderTabla();
+                        return;
+                    }
+
+                    filas = res.data || [];
+
+                    var tablasCargar = [];
+                    def.columnas.forEach(function (col) {
+                        if (col.tipo === 'select') tablasCargar.push(col.tabla);
+                        if (col.tipo === 'derivado' && col.necesita) {
+                            col.necesita.forEach(function (t) {
+                                tablasCargar.push(t);
+                            });
+                        }
+                    });
+                    var pendientes = tablasCargar.map(function (t) {
+                        return cargarOpciones(t)['catch'](function () {});
+                    });
+
+                    return Promise.all(pendientes).then(function () {
+                        definirEstado('Conectado', 'ok');
+                        renderTabla();
+                    });
+                });
+            }
+
+            // ===== Pintar la tabla =====
+            function renderTabla() {
+                var def = TABLAS[tablaActual];
+                el.titulo.textContent = def.etiqueta;
+                el.conteo.textContent = filas.length + (filas.length === 1 ? ' registro' : ' registros');
+
+                el.thead.innerHTML = '';
+                el.tbody.innerHTML = '';
+
+                var fila = document.createElement('tr');
+                def.columnas.forEach(function (col) {
+                    var th = document.createElement('th');
+                    th.textContent = col.etiqueta;
+                    fila.appendChild(th);
+                });
+                var thAcc = document.createElement('th');
+                thAcc.className = 'col-acciones';
+                fila.appendChild(thAcc);
+                el.thead.appendChild(fila);
+
+                if (filas.length === 0) {
+                    var vacio = document.createElement('tr');
+                    var td = document.createElement('td');
+                    td.className = 'vacio';
+                    td.colSpan = def.columnas.length + 1;
+                    td.textContent =
+                        'No hay registros todavía. Si tu base está vacía, corre el SQL de datos de ejemplo en Supabase, o usa "Nuevo registro".';
+                    vacio.appendChild(td);
+                    el.tbody.appendChild(vacio);
+                    return;
+                }
+
+                filas.forEach(function (registro) {
+                    var tr = document.createElement('tr');
+
+                    def.columnas.forEach(function (col) {
+                        var td = document.createElement('td');
+                        if (col.pk) td.className = 'col-id';
+                        if (col.tipo === 'derivado') {
+                            var derivado = resolverDerivado(col, registro[col.desde]);
+                            td.textContent = derivado === null || derivado === undefined || derivado === '' ? '—' : derivado;
+                        } else {
+                            var valor = registro[col.campo];
+                            td.textContent =
+                                valor === null || valor === undefined
+                                    ? '—'
+                                    : col.tipo === 'select'
+                                      ? etiquetaDeOpcion(col, valor)
+                                      : valor;
+                        }
+                        tr.appendChild(td);
+                    });
+
+                    var tdAcc = document.createElement('td');
+                    tdAcc.className = 'acciones';
+
+                    var btnEditar = document.createElement('button');
+                    btnEditar.className = 'btn accion mini';
+                    btnEditar.textContent = 'Editar';
+                    btnEditar.addEventListener('click', function () {
+                        abrirFormulario(registro);
+                    });
+                    tdAcc.appendChild(btnEditar);
+
+                    var btnEliminar = document.createElement('button');
+                    btnEliminar.className = 'btn peligro mini';
+                    btnEliminar.textContent = 'Eliminar';
+                    btnEliminar.addEventListener('click', function () {
+                        eliminar(registro);
+                    });
+                    tdAcc.appendChild(btnEliminar);
+
+                    tr.appendChild(tdAcc);
+                    el.tbody.appendChild(tr);
+                });
+            }
+
+            // ===== Formulario =====
+            function aplicarValor(input, col, registro, claves, label) {
+                if (!registro) return;
+                var v = registro[col.campo];
+                input.value = v === null || v === undefined ? '' : v;
+                if (claves.indexOf(col.campo) !== -1) {
+                    input.disabled = true;
+                    label.innerHTML += ' <span class="ayuda">(no editable)</span>';
+                }
+            }
+
+            function abrirFormulario(registro) {
+                var def = TABLAS[tablaActual];
+                var claves = columnasClave(tablaActual);
+                editando = registro ? clavesDe(registro) : null;
+
+                el.formTitulo.textContent = registro
+                    ? 'Editar ' + def.singular.toLowerCase()
+                    : 'Nuevo ' + def.singular.toLowerCase();
+                el.formCampos.innerHTML = '';
+
+                var pendientes = def.columnas.map(function (col) {
+                    if (!registro && col.pk && col.auto) {
+                        var wrapAuto = document.createElement('div');
+                        wrapAuto.className = 'campo';
+                        var labelAuto = document.createElement('label');
+                        labelAuto.textContent = col.etiqueta;
+                        wrapAuto.appendChild(labelAuto);
+                        var nota = document.createElement('div');
+                        nota.className = 'nota-auto';
+                        nota.textContent = 'Automático: lo asigna Supabase';
+                        wrapAuto.appendChild(nota);
+                        el.formCampos.appendChild(wrapAuto);
+                        return Promise.resolve();
+                    }
+
+                    if (col.tipo === 'derivado') {
+                        var wrapD = document.createElement('div');
+                        wrapD.className = 'campo';
+                        var labelD = document.createElement('label');
+                        labelD.textContent = col.etiqueta;
+                        wrapD.appendChild(labelD);
+                        var valorD = document.createElement('div');
+                        valorD.className = 'nota-auto';
+                        valorD.id = 'd_' + col.campo;
+                        valorD.textContent = '—';
+                        wrapD.appendChild(valorD);
+                        el.formCampos.appendChild(wrapD);
+                        return Promise.resolve();
+                    }
+
+                    var wrap = document.createElement('div');
+                    wrap.className = 'campo';
+
+                    var label = document.createElement('label');
+                    label.htmlFor = 'f_' + col.campo;
+                    label.innerHTML =
+                        col.etiqueta +
+                        (col.requerido ? ' *' : '') +
+                        (col.pk && col.auto && !registro ? ' <span class="ayuda">(vacío = automático)</span>' : '');
+                    wrap.appendChild(label);
+
+                    if (col.tipo === 'select') {
+                        var select = document.createElement('select');
+                        select.id = 'f_' + col.campo;
+                        wrap.appendChild(select);
+                        el.formCampos.appendChild(wrap);
+                        return getOpciones(col).then(function (lista) {
+                            var vacia = document.createElement('option');
+                            vacia.value = '';
+                            vacia.textContent = lista.length ? '— Selecciona —' : '— Sin opciones —';
+                            select.appendChild(vacia);
+                            lista.forEach(function (o) {
+                                var opt = document.createElement('option');
+                                opt.value = o[col.valor];
+                                opt.textContent = o[col.texto];
+                                select.appendChild(opt);
+                            });
+                            aplicarValor(select, col, registro, claves, label);
+                        });
+                    }
+
+                    var input = document.createElement('input');
+                    input.type = col.tipo === 'number' ? 'number' : 'text';
+                    if (col.step) input.step = col.step;
+                    if (col.min !== undefined) input.min = col.min;
+                    if (col.max !== undefined) input.max = col.max;
+                    input.id = 'f_' + col.campo;
+                    wrap.appendChild(input);
+                    el.formCampos.appendChild(wrap);
+                    aplicarValor(input, col, registro, claves, label);
+                    return Promise.resolve();
+                });
+
+                return Promise.all(pendientes).then(function () {
+                    def.columnas.forEach(function (col) {
+                        if (col.tipo !== 'derivado') return;
+                        var origen = document.getElementById('f_' + col.desde);
+                        var destino = document.getElementById('d_' + col.campo);
+                        var actualizar = function () {
+                            var v = origen ? origen.value : '';
+                            var r = v ? resolverDerivado(col, v) : null;
+                            destino.textContent = r === null || r === undefined || r === '' ? '—' : r;
+                        };
+                        if (origen) origen.addEventListener('change', actualizar);
+                        actualizar();
+                    });
+                    el.formPanel.classList.add('abierto');
+                    if (el.formPanel.scrollIntoView) el.formPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+            }
+
+            function cerrarFormulario() {
+                editando = null;
+                el.formPanel.classList.remove('abierto');
+                el.formCampos.innerHTML = '';
+            }
+
+            function leerFormulario() {
+                var def = TABLAS[tablaActual];
+                var claves = columnasClave(tablaActual);
+                var payload = {};
+
+                for (var i = 0; i < def.columnas.length; i++) {
+                    var col = def.columnas[i];
+                    if (col.tipo === 'derivado') continue;
+                    if (editando && claves.indexOf(col.campo) !== -1) continue;
+
+                    var input = document.getElementById('f_' + col.campo);
+                    if (!input) continue; // el ID automatico no se dibuja al crear
+                    var v = input.value.trim();
+
+                    if (col.requerido && v === '') {
+                        aviso('El campo "' + col.etiqueta + '" es obligatorio', 'error');
+                        input.focus();
+                        return null;
+                    }
+
+                    if (v === '') {
+                        if (col.tipo === 'number' && col.pk && col.auto) continue;
+                        payload[col.campo] = null;
+                    } else if (col.tipo === 'number' || col.tipo === 'select') {
+                        var num = Number(v);
+                        payload[col.campo] = isNaN(num) ? v : num;
+                    } else {
+                        payload[col.campo] = v;
+                    }
+                }
+
+                return payload;
+            }
+
+            function guardar() {
+                var def = TABLAS[tablaActual];
+                var payload = leerFormulario();
+                if (!payload) return;
+
+                el.btnGuardar.disabled = true;
+                var consulta;
+
+                if (editando) {
+                    consulta = db.from(tablaActual).update(payload);
+                    Object.keys(editando).forEach(function (k) {
+                        consulta = consulta.eq(k, editando[k]);
+                    });
+                } else {
+                    consulta = db.from(tablaActual).insert(payload);
+                }
+
+                consulta.select().then(function (res) {
+                    el.btnGuardar.disabled = false;
+                    if (res.error) {
+                        aviso('No se pudo guardar: ' + mensajeError(res.error), 'error');
+                        return;
+                    }
+                    var creado = res.data && res.data[0];
+                    var etiquetaId =
+                        !editando && creado && def.pk && creado[def.pk] !== undefined ? ' con ID ' + creado[def.pk] : '';
+                    aviso((editando ? 'Registro guardado' : 'Registro creado') + etiquetaId + ' en Supabase', 'ok');
+                    opciones = {};
+                    cerrarFormulario();
+                    cargarFilas();
+                });
+            }
+
+            function eliminar(registro) {
+                if (!confirm('¿Eliminar este registro de ' + TABLAS[tablaActual].etiqueta.toLowerCase() + '?')) return;
+
+                var consulta = db.from(tablaActual).delete();
+                Object.keys(clavesDe(registro)).forEach(function (k) {
+                    consulta = consulta.eq(k, registro[k]);
+                });
+
+                consulta.then(function (res) {
+                    if (res.error) {
+                        aviso('No se pudo eliminar: ' + mensajeError(res.error), 'error');
+                        return;
+                    }
+                    aviso('Registro eliminado de Supabase', 'ok');
+                    opciones = {};
+                    cargarFilas();
+                });
+            }
+
+            // ===== Inicio =====
+            el.btnNuevo.addEventListener('click', function () {
+                abrirFormulario(null);
+            });
+            el.btnGuardar.addEventListener('click', guardar);
+            el.btnCancelar.addEventListener('click', cerrarFormulario);
+
+            if (!db) {
+                definirEstado('Sin conexión', 'error');
+                el.tbody.innerHTML =
+                    '<tr><td class="vacio">No se pudo cargar supabase-js desde el CDN. Revisa tu conexión a internet y recarga.</td></tr>';
+                return;
+            }
+
+            renderNav();
+            cargarFilas();
+        })();
+    </script>
+
+    <!--
+    ============================================================
+      PEGA ESTO EN SUPABASE -> SQL EDITOR -> RUN (una sola vez)
+      Habilita la escritura (RLS) y carga los datos de ejemplo.
+    ============================================================
+
+      drop policy if exists "app_all_carrera" on carrera;
+      create policy "app_all_carrera" on carrera for all to anon using (true) with check (true);
+
+      drop policy if exists "app_all_alumno" on alumno;
+      create policy "app_all_alumno" on alumno for all to anon using (true) with check (true);
+
+      drop policy if exists "app_all_docente" on docente;
+      create policy "app_all_docente" on docente for all to anon using (true) with check (true);
+
+      drop policy if exists "app_all_curso" on curso;
+      create policy "app_all_curso" on curso for all to anon using (true) with check (true);
+
+      drop policy if exists "app_all_matricula" on matricula;
+      create policy "app_all_matricula" on matricula for all to anon using (true) with check (true);
+
+      insert into carrera (id_carrera, nombre_carrera) values
+        (1,'Ingeniería de Sistemas'),(2,'Administración de Empresas'),
+        (3,'Derecho'),(4,'Medicina Humana'),(5,'Contabilidad')
+      on conflict do nothing;
+
+      insert into docente (id_docente, nombre_docente) values
+        (1,'Juan Pérez López'),(2,'María Gómez Ríos'),(3,'Carlos Ramírez Soto'),
+        (4,'Ana Torres Vega'),(5,'Luis Fernández Cruz')
+      on conflict do nothing;
+
+      insert into alumno (id_alumno, nombre, dni, id_carrera) values
+        (1,'Ana Quispe Huamán','70123456',1),(2,'Luis Mamani Flores','70234567',1),
+        (3,'Carla Rojas Díaz','70345678',2),(4,'Diego Huamán León','70456789',3),
+        (5,'Sofía Chávez Núñez','70567890',4),(6,'Marco Vargas Salas','70678901',5),
+        (7,'Elena Paredes Ruiz','70789012',1)
+      on conflict do nothing;
+
+      insert into curso (id_curso, nombre_curso, id_docente) values
+        (1,'Algoritmos y Estructuras',1),(2,'Base de Datos',1),(3,'Cálculo I',4),
+        (4,'Marketing',2),(5,'Derecho Civil',5),(6,'Anatomía Humana',3)
+      on conflict do nothing;
+
+      insert into matricula (id_alumno, id_curso, nota) values
+        (1,1,16),(1,2,14),(2,1,11),(3,4,18),(4,5,15),(5,6,12),(7,2,19)
+      on conflict do nothing;
+
+      do $$
+      begin
+        if pg_get_serial_sequence('carrera','id_carrera') is not null then
+          perform setval(pg_get_serial_sequence('carrera','id_carrera'), (select coalesce(max(id_carrera),1) from carrera));
+        end if;
+        if pg_get_serial_sequence('docente','id_docente') is not null then
+          perform setval(pg_get_serial_sequence('docente','id_docente'), (select coalesce(max(id_docente),1) from docente));
+        end if;
+        if pg_get_serial_sequence('alumno','id_alumno') is not null then
+          perform setval(pg_get_serial_sequence('alumno','id_alumno'), (select coalesce(max(id_alumno),1) from alumno));
+        end if;
+        if pg_get_serial_sequence('curso','id_curso') is not null then
+          perform setval(pg_get_serial_sequence('curso','id_curso'), (select coalesce(max(id_curso),1) from curso));
+        end if;
+      end $$;
+    ============================================================
+    -->
 </body>
+
 </html>
